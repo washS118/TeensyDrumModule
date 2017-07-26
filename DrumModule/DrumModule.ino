@@ -12,7 +12,6 @@ struct PadData {
 
 const int numReadings = 10;     // larger values results in more smoothing but lower sensitivity
 
-int readings[numReadings];      // the readings
 int total = 0;                  // the running total
 int average = 0;                // the average
 int readIndex = 0;              // the current index in readings;
@@ -23,11 +22,6 @@ void setup() {
   //Initialize Comms
   usbMIDI.begin();
   Serial.begin(38400);
-
-  //Initialize readings
-  for(int i = 0; i < numReadings; i++){
-    readings[i] = 0;
-  }
 
   //Initialize Pads
   snare.note = 38;
@@ -43,16 +37,21 @@ bool hasHit = false;
 void loop() {
   //Track the previous average and get raw input
   prev = average;
-  val = analogRead(pin);
+  high = 0;
+  total = 0;
+  readIndex = 0;  
 
-  //Update Readings 
-  total -= readings[readIndex];
-  readings[readIndex] = val;
-  total += readings[readIndex];
+  //Update Readings
+  while(readIndex < numReadings){
+    val = analogRead(pin);
+    total += val;
 
-  //Increment readIndex wrap to match readings
-  readIndex++;
-  if(readIndex >= numReadings) readIndex = 0;
+    if(high < val){
+      high = val;
+    }
+
+    readIndex++;
+  }
 
   //Find average
   average = total / numReadings;
