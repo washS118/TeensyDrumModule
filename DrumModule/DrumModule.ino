@@ -1,13 +1,16 @@
 #include <MIDI.h>
 
 #define threshold 10
-#define delayAfterHit 100
+#define delayAfterHit 150
 #define channel 1
-#define pin 0
 
 struct PadData {
   int note;
+  int pin;
+  int prev;
+  int val;
   bool isOn;
+  bool hasHit;
 };
 
 const int numReadings = 10;     // larger values results in more smoothing but lower sensitivity
@@ -16,7 +19,11 @@ int total = 0;                  // the running total
 int average = 0;                // the average
 int readIndex = 0;              // the current index in readings;
 
+const int numPads = 2;
+
+struct PadData *pads[numPads];
 struct PadData snare;
+struct PadData hiTom;
 
 void setup() {
   //Initialize Comms
@@ -25,82 +32,97 @@ void setup() {
 
   //Initialize Pads
   snare.note = 38;
+  snare.pin = 0;
   snare.isOn = false;
+
+  hiTom.note = 48;
+  hiTom.pin = 1;
+  hiTom.isOn = false;
+
+  //Initialize pad array
+  pads[0] = &snare;
+  pads[1] = &hiTom;
 }
 
-//Input value
-int val = 0;
-int prev = 0;
-int high = 0;
-bool hasHit = false;
-
 void loop() {
-  //Track the previous average and get raw input
-  prev = average;
-  high = 0;
-  total = 0;
-  readIndex = 0;  
-
-  //Update Readings
-  while(readIndex < numReadings){
-    val = analogRead(pin);
-    total += val;
-
-    if(high < val){
-      high = val;
-    }
-
-    readIndex++;
-  }
-
-  //Find average
-  average = total / numReadings;
+  collectVelocities();
+  processHits();
   
-  if(average > threshold){
-    //Send a hit if at peak
-    if(average >= prev){
-      hasHit = false;
-    }else if(!hasHit){
-      //Using raw data in order to get higher MIDI values
-      sendHit(&snare,val);
-      hasHit = true;
-    }
-  }
-
   //Dispose of Midi input
   while(usbMIDI.read());
 }
 
-void sendHit(struct PadData *pad, int val){
-  Serial.print("Hit with val ");
-  Serial.println(val);
-  
-  usbMIDI.sendNoteOn(pad->note, val, channel);
-  delay(delayAfterHit);
-  usbMIDI.sendNoteOff(pad->note, val, channel);
+//Input value
+int val = 0;
+int high = 0;
+
+void collectVelocities(){
+  for(int i = 0; i < numPads; i++){ 
+    //Update previous reading
+    pads[i]->prev = pads[i]->val;
+    pads[i]->val = 0;
+
+    //Reset smoothing algo;
+    total = 0;
+    high = 0;
+    readIndex = 0;
+
+    //Update Readings
+    while(readIndex < numReadings){
+      val = analogRead(pads[i]->pin);
+      total += val;
+
+      if(high < val) high = val;
+      readIndex++;
+    }
+
+    //Find average
+    if(total/numReadings >= threshold){
+      pads[i]->val = high;
+    }else{
+      pads[i]->val = 0;
+    }
+
+    
+  }
 }
 
-/*
- * Dear Future Me.
- * Please Try to find a way around this mess.
- * It currently exists because most hits generate
- * two peaks in the data. I have tried increasing
- * the threshold but it ends up killing the sensitivity.
- * Ives also tried increasing the number of readings but
- * it results in the same issues.
- 
-void sendHit(struct PadData *pad, int val){
-  //Swap between on and off on each peak
-  if(!pad->isOn){
-    usbMIDI.sendNoteOn(pad->note,val,channel);
-    Serial.print("HIT with val ");
-    Serial.println(val);
-  }else{
-    usbMIDI.sendNoteOff(pad->note,val,channel);
-    Serial.println("Ending Hit");
+bool hitOnPass;
+void processHits(){
+  int i;
+  hitOnPass = false;
+
+  //Loop through each pad and send hit at peaks;
+  for(i = 0; i < numPads; i++){
+    if(pads[i]->val > pads[i]->prev){
+        pads[i]->hasHit = false;
+    }else if(!pads[i]->hasHit){
+        if(pads[i]->val >= threshold){
+          Serial.print("Pad ");
+          Serial.print(pads[i]->note);
+          Serial.print(" was hit with val ");
+          Serial.println(pads[i]->val);
+        
+  
+          usbMIDI.sendNoteOn(pads[i]->note, pads[i]->val, channel);
+          pads[i]->isOn = true;
+          pads[i]->hasHit = true;
+          hitOnPass = true;
+        }
+     }
   }
-  pad->isOn = !pad->isOn;
-  delay(delayAfterHit);
+
+  //Pause to allow sensors to drop below peak
+  if(hitOnPass){
+    delay(delayAfterHit);
+  }
+
+  //Shut off any pads that were hit
+  for(i = 0; i < numPads; i++){
+    if(pads[i]->isOn) {
+      usbMIDI.sendNoteOff(pads[i]->note, pads[i]->val, channel);
+      pads[i]->isOn = false;
+    }
+  }
 }
-*/
 
