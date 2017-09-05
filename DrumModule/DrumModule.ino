@@ -1,7 +1,7 @@
 #include <MIDI.h>
 
 #define threshold 10
-#define delayAfterHit 150
+#define delayAfterHit 10
 #define channel 1
 
 struct PadData {
@@ -19,11 +19,15 @@ int total = 0;                  // the running total
 int average = 0;                // the average
 int readIndex = 0;              // the current index in readings;
 
-const int numPads = 2;
+const int numPads = 1;
 
 struct PadData *pads[numPads];
 struct PadData snare;
 struct PadData hiTom;
+
+//Data for switch control pins
+const int numControlPins = 4;
+int controlPins[numControlPins];
 
 void setup() {
   //Initialize Comms
@@ -35,13 +39,15 @@ void setup() {
   snare.pin = 0;
   snare.isOn = false;
 
+  pinMode(snare.pin, INPUT);
+
   hiTom.note = 48;
   hiTom.pin = 1;
   hiTom.isOn = false;
 
   //Initialize pad array
   pads[0] = &snare;
-  pads[1] = &hiTom;
+  //pads[1] = &hiTom;
 }
 
 void loop() {
@@ -60,7 +66,7 @@ void collectVelocities(){
   for(int i = 0; i < numPads; i++){ 
     //Update previous reading
     pads[i]->prev = pads[i]->val;
-    pads[i]->val = 0;
+    pads[i]->val = analogRead(pads[i]->pin);
 
     //Reset smoothing algo;
     total = 0;
@@ -83,6 +89,7 @@ void collectVelocities(){
       pads[i]->val = 0;
     }
 
+    delay(10);
     
   }
 }
@@ -94,17 +101,19 @@ void processHits(){
 
   //Loop through each pad and send hit at peaks;
   for(i = 0; i < numPads; i++){
+    Serial.println(pads[i]->val);
     if(pads[i]->val > pads[i]->prev){
         pads[i]->hasHit = false;
     }else if(!pads[i]->hasHit){
-        if(pads[i]->val >= threshold){
+        if(pads[i]->val > 0){
+          /*
           Serial.print("Pad ");
           Serial.print(pads[i]->note);
           Serial.print(" was hit with val ");
           Serial.println(pads[i]->val);
-        
-  
-          usbMIDI.sendNoteOn(pads[i]->note, pads[i]->val, channel);
+          */
+    
+          usbMIDI.sendNoteOn(pads[i]->note, 99, channel);
           pads[i]->isOn = true;
           pads[i]->hasHit = true;
           hitOnPass = true;
@@ -120,9 +129,19 @@ void processHits(){
   //Shut off any pads that were hit
   for(i = 0; i < numPads; i++){
     if(pads[i]->isOn) {
-      usbMIDI.sendNoteOff(pads[i]->note, pads[i]->val, channel);
+      usbMIDI.sendNoteOff(pads[i]->note, 99, channel);
       pads[i]->isOn = false;
     }
   }
 }
 
+/*
+int readSwitchedPin(int pin){
+  for(int i = 0; i < numControlPins; i++){
+    if(pin % 2 == 1) digitalWrite(controlPins[i], HIGH);
+    else digitalWrite(controlPins[i], LOW);
+    pin = pin / 2;
+  }
+  return 1;
+}
+*/
