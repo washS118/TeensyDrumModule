@@ -38,3 +38,10 @@ void updatePad(PadData *pad){
   //TODO
 }
 
+/**************************************
+ * play note using data stored in pad *
+ **************************************/
+void playMidiNote(PadData *pad){
+  //TODO
+}
+
