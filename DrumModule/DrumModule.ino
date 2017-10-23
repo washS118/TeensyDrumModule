@@ -16,10 +16,25 @@ typedef struct {
 
 PadData pads[NUM_PADS];                       // container for all pads
 
+/**************************
+ * program initialization *
+ **************************/
 void setup() {
   setupPads();
+  setupSwitchArray();
 }
 
+/*************
+ * main loop *
+ *************/
 void loop() {
-  
+  //TODO
 }
+
+/*********************************************
+ * get input and update specified pad buffer *
+ *********************************************/
+void updatePad(PadData *pad){
+  //TODO
+}
+

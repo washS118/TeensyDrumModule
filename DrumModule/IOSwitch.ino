@@ -1,7 +1,10 @@
-#define MAX_PINS 10;
+/************************************************
+ * Provides functions to read switched I/O pins *
+ ************************************************/
 
-// defines pins for easy use in the read function
-typedef struct {
+#define MAX_PINS 10;                      // how many pins are allowed
+
+typedef struct {                          // defines pins for easy use in the read function
   bool pin0;
   bool pin1;
   bool pin2;
@@ -9,9 +12,12 @@ typedef struct {
 }SwitchKey;
 
 SwitchKey keys[16];
-unsigned char analogPins[] = {A0,A1};   // which pins to use for reads
+unsigned char readPins[] = {A0,A1};       // which pins to use for reads
+unsigned char controlPins[] = {0,1,2,3};  // which pins to use for controlling the switch
 
-// prepares the IO switch for use
+/**********************************
+ * prepares the IO switch for use *
+ **********************************/
 void setupSwitchArray(){
   for(int i = 0; i < 16; i++){
     keys[i].pin0 = i & B0001;
@@ -21,8 +27,10 @@ void setupSwitchArray(){
   }
 }
 
-// reads a value from the switched pin
-// returns -1 if pin does not exist or is out of range
+/*******************************************************
+ * reads a value from the switched pin                 *
+ * returns -1 if pin does not exist or is out of range *
+ *******************************************************/
 int readSwitchedPin(int pin){
   //TODO
   return -1;
