@@ -1,147 +1,25 @@
 #include <MIDI.h>
 
-#define threshold 10
-#define delayAfterHit 10
-#define channel 1
+#define NUM_PADS 2                            // how many pads are supported by the controller
+#define CHANNEL 1                             // the midi channel
+#define BUFFER_SIZE 10                        // how many inputs should be stored
+#define MIN_TIME_BETWEEN_NOTES 1              // how many milliseconds before next hit
 
-struct PadData {
-  int note;
-  int pin;
-  int prev;
-  int val;
-  bool isOn;
-  bool hasHit;
-};
+typedef struct {
+  unsigned int  threshold;                    // the threshold to determine what counts as idle
+  unsigned char note;                         // the midi note to be played on hit
+  unsigned char pin;                          // the pin index for using the switched pin mode
+  unsigned int  inputBuffer[BUFFER_SIZE];     // the buffer containing the raw analog values
+  unsigned char bufferIndex;                  // specifies which index is the most recent
+  unsigned int  lastHitTime;                  // the millisecond the pad was last hit on
+}PadData;
 
-const int numReadings = 10;     // larger values results in more smoothing but lower sensitivity
-
-int total = 0;                  // the running total
-int average = 0;                // the average
-int readIndex = 0;              // the current index in readings;
-
-const int numPads = 1;
-
-struct PadData *pads[numPads];
-struct PadData snare;
-struct PadData hiTom;
-
-//Data for switch control pins
-const int numControlPins = 4;
-int controlPins[numControlPins];
+PadData pads[NUM_PADS];                       // container for all pads
 
 void setup() {
-  //Initialize Comms
-  usbMIDI.begin();
-  Serial.begin(38400);
-
-  //Initialize Pads
-  snare.note = 38;
-  snare.pin = 0;
-  snare.isOn = false;
-
-  pinMode(snare.pin, INPUT);
-
-  hiTom.note = 48;
-  hiTom.pin = 1;
-  hiTom.isOn = false;
-
-  //Initialize pad array
-  pads[0] = &snare;
-  //pads[1] = &hiTom;
+  setupPads();
 }
 
 void loop() {
-  collectVelocities();
-  processHits();
   
-  //Dispose of Midi input
-  while(usbMIDI.read());
 }
-
-//Input value
-int val = 0;
-int high = 0;
-
-void collectVelocities(){
-  for(int i = 0; i < numPads; i++){ 
-    //Update previous reading
-    pads[i]->prev = pads[i]->val;
-    pads[i]->val = analogRead(pads[i]->pin);
-
-    //Reset smoothing algo;
-    total = 0;
-    high = 0;
-    readIndex = 0;
-
-    //Update Readings
-    while(readIndex < numReadings){
-      val = analogRead(pads[i]->pin);
-      total += val;
-
-      if(high < val) high = val;
-      readIndex++;
-    }
-
-    //Find average
-    if(total/numReadings >= threshold){
-      pads[i]->val = high;
-    }else{
-      pads[i]->val = 0;
-    }
-
-    delay(10);
-    
-  }
-}
-
-bool hitOnPass;
-void processHits(){
-  int i;
-  hitOnPass = false;
-
-  //Loop through each pad and send hit at peaks;
-  for(i = 0; i < numPads; i++){
-    Serial.println(pads[i]->val);
-    if(pads[i]->val > pads[i]->prev){
-        pads[i]->hasHit = false;
-    }else if(!pads[i]->hasHit){
-        if(pads[i]->val > 0){
-          /*
-          Serial.print("Pad ");
-          Serial.print(pads[i]->note);
-          Serial.print(" was hit with val ");
-          Serial.println(pads[i]->val);
-          */
-    
-          usbMIDI.sendNoteOn(pads[i]->note, 99, channel);
-          pads[i]->isOn = true;
-          pads[i]->hasHit = true;
-          hitOnPass = true;
-        }
-     }
-  }
-
-  //Pause to allow sensors to drop below peak
-  if(hitOnPass){
-    delay(delayAfterHit);
-  }
-
-  //Shut off any pads that were hit
-  for(i = 0; i < numPads; i++){
-    if(pads[i]->isOn) {
-      usbMIDI.sendNoteOff(pads[i]->note, 99, channel);
-      pads[i]->isOn = false;
-    }
-  }
-}
-
-/*
-int readSwitchedPin(int pin){
-  for(int i = 0; i < numControlPins; i++){
-    if(pin % 2 == 1) digitalWrite(controlPins[i], HIGH);
-    else digitalWrite(controlPins[i], LOW);
-    pin = pin / 2;
-  }
-  return 1;
-}
-*/
