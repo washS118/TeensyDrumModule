@@ -12,6 +12,7 @@ typedef struct {
   unsigned int  inputBuffer[BUFFER_SIZE];     // the buffer containing the raw analog values
   unsigned char bufferIndex;                  // specifies which index is the most recent
   unsigned int  lastHitTime;                  // the millisecond the pad was last hit on
+  unsigned int  currentMax;                   // the current maximum value in the buffer
 }PadData;
 
 PadData pads[NUM_PADS];                       // container for all pads
@@ -21,7 +22,7 @@ PadData pads[NUM_PADS];                       // container for all pads
  **************************/
 void setup() {
   setupPads();
-  setupSwitchArray();
+  setupSwitch();
 }
 
 /*************
@@ -42,6 +43,7 @@ void updatePad(PadData *pad){
  * play note using data stored in pad *
  **************************************/
 void playMidiNote(PadData *pad){
-  //TODO
+  usbMIDI.sendNoteOn(pad->note, pad->currentMax, CHANNEL);
+  usbMIDI.sendNoteOff(pad->note, pad->currentMax, CHANNEL);
 }
 
