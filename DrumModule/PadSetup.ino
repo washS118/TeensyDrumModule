@@ -20,6 +20,7 @@ void setupPads(){
     memset(&pads[i].inputBuffer, 0, sizeof(pads[i].inputBuffer));
     pads[i].bufferIndex = 0;
     pads[i].lastHitTime = 0;
+    pads[i].currentMax  = 0;
   }
 }
 
