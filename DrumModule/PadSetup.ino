@@ -4,9 +4,9 @@
  * kick,snare                              *
  *******************************************/
 
-unsigned char notes[] =       { 35, 38};    // midi notes for each pad
-unsigned char pins[] =        {  0,  1};    // swiched pin for each pad
-unsigned int  thresholds[] =  {100, 10};    // pad thresholds
+unsigned char notes[] =       {35, 38};    // midi notes for each pad
+unsigned char pins[] =        {A0, A1};    // swiched pin for each pad
+unsigned int  thresholds[] =  {10, 10};    // pad thresholds
 
 /*******************
  * setup pad array *

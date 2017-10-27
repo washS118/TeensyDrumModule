@@ -28,15 +28,34 @@ void setup() {
 /*************
  * main loop *
  *************/
+unsigned int buffer[] = {0,0,0,0,0,0,0,0,0,0};
+unsigned char currentIndex = 0;
+ 
 void loop() {
   //TODO
+  updatePad(&pads[0]);
+  Serial.print(pads[0].currentMax);
+  Serial.print(" 1024");
+  Serial.println();
+  delay(0);
 }
 
 /*********************************************
  * get input and update specified pad buffer *
  *********************************************/
 void updatePad(PadData *pad){
-  //TODO
+  unsigned int val = analogRead(pad->pin);
+  pad->inputBuffer[pad->bufferIndex] = val;
+  pad->bufferIndex++;
+  if(pad->bufferIndex >= BUFFER_SIZE) pad->bufferIndex = (unsigned int) 0;
+
+  unsigned int max = 0;
+  for(int i = 0; i < BUFFER_SIZE; i++){
+    if(pad->inputBuffer[i] > pad->threshold &&
+      pad->inputBuffer[i] > max) max = pad->inputBuffer[i];
+  }
+
+  pad->currentMax = max;
 }
 
 /**************************************
