@@ -33,11 +33,13 @@ unsigned char currentIndex = 0;
  
 void loop() {
   //TODO
-  updatePad(&pads[0]);
-  Serial.print(pads[0].currentMax);
-  Serial.print(" 1024");
-  Serial.println();
-  delay(0);
+  for(int i = 0; i < NUM_PADS; ++i){
+    updatePad(&pads[i]);
+    calculateNote($pads[i]);
+  }
+
+  updateHat();
+  calculateHat();
 }
 
 /*********************************************
@@ -58,11 +60,26 @@ void updatePad(PadData *pad){
   pad->currentMax = max;
 }
 
+/*******************************************************
+ * calculates the midi note to be played               *
+ * if note needs played, it will send a trigger signal *
+ *******************************************************/
+ void calculateNote(PadData *pad){
+  if(pad->currentMax >= pad->threshold){
+    unsigned int time = millis();
+    unsigned int timeSinceHit = time - pad->lastHitTime;
+    if(timeSinceHit > MIN_TIME_BETWEEN_NOTES){
+      pad->lastHitTime = time;
+      playMidiNote(pad->note, pad->currentMax);
+    }
+  }
+ }
+
 /**************************************
  * play note using data stored in pad *
  **************************************/
-void playMidiNote(PadData *pad){
-  usbMIDI.sendNoteOn(pad->note, pad->currentMax, CHANNEL);
-  usbMIDI.sendNoteOff(pad->note, pad->currentMax, CHANNEL);
+void playMidiNote(unsigned char note, unsigned int velocity){
+  usbMIDI.sendNoteOn(note, velocity, CHANNEL);
+  usbMIDI.sendNoteOff(note, velocity, CHANNEL);
 }
 
