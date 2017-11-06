@@ -1,6 +1,6 @@
 #include <MIDI.h>
 
-#define NUM_PADS 8                            // how many pads are supported by the controller
+#define NUM_PADS 9                            // how many pads are supported by the controller
 #define CHANNEL 1                             // the midi channel
 #define BUFFER_SIZE 10                        // how many inputs should be stored
 #define MIN_TIME_BETWEEN_NOTES 1              // how many milliseconds before next hit
@@ -34,13 +34,12 @@ unsigned char currentIndex = 0;
  
 void loop() {
   Serial.println(analogRead(A0));
+  updateHat();
+  
   for(int i = 0; i < NUM_PADS; ++i){
     updatePad(&pads[i]);
     calculateNote(&pads[i]);
   }
-
-  updateHat();
-  calculateHat();
 }
 
 /*********************************************
