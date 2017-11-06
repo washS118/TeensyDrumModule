@@ -1,12 +1,19 @@
 /*******************************************
  * sets up the pads using parrallel arrays *
  * pad order is as follows                 *
- * kick,snare                              *
+ * kick ----------- 35                     *
+ * snare ---------- 38                     *
+ * hi-tom --------- 50                     * 
+ * hi-mid-tom ----- 48                     *
+ * low-floor-tom -- 41                     *
+ * crash1 --------- 49                     *
+ * crash2 --------- 57                     *
+ * ride-bell ------ 53                     *
  *******************************************/
 
-unsigned char notes[] =       {35, 38};    // midi notes for each pad
-unsigned char pins[] =        {A0, A1};    // swiched pin for each pad
-unsigned int  thresholds[] =  {10, 10};    // pad thresholds
+unsigned char notes[] =       {35, 38, 50, 48, 41, 49, 57, 53};    // midi notes for each pad
+unsigned char pins[] =        {A0, A1, A2, A3, A4, A5, A6, A7};    // swiched pin for each pad
+unsigned int  thresholds[] =  {10, 10, 10, 10, 10, 10, 10, 10};    // pad thresholds
 
 /*******************
  * setup pad array *

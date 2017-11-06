@@ -34,7 +34,7 @@ void calculateHat(){
     unsigned int timeSinceHit = time - lastHitTime;
     if(timeSinceHit > MIN_TIME_BETWEEN_NOTES){
       lastHitTime = time;
-      if(digitalRead(hatController) playMidiNote(closedNote, currentMax);
+      if(digitalRead(hatController)) playMidiNote(closedNote, currentMax);
       else playMidiNote(openNote, currentMax);
     }
   }

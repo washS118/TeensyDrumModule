@@ -1,6 +1,6 @@
 #include <MIDI.h>
 
-#define NUM_PADS 2                            // how many pads are supported by the controller
+#define NUM_PADS 8                            // how many pads are supported by the controller
 #define CHANNEL 1                             // the midi channel
 #define BUFFER_SIZE 10                        // how many inputs should be stored
 #define MIN_TIME_BETWEEN_NOTES 1              // how many milliseconds before next hit
@@ -32,10 +32,10 @@ unsigned int buffer[] = {0,0,0,0,0,0,0,0,0,0};
 unsigned char currentIndex = 0;
  
 void loop() {
-  //TODO
+  Serial.println(analogRead(A0));
   for(int i = 0; i < NUM_PADS; ++i){
     updatePad(&pads[i]);
-    calculateNote($pads[i]);
+    calculateNote(&pads[i]);
   }
 
   updateHat();
@@ -79,6 +79,8 @@ void updatePad(PadData *pad){
  * play note using data stored in pad *
  **************************************/
 void playMidiNote(unsigned char note, unsigned int velocity){
+  if(note != 35) return;
+  if(velocity > 127) velocity = 127;
   usbMIDI.sendNoteOn(note, velocity, CHANNEL);
   usbMIDI.sendNoteOff(note, velocity, CHANNEL);
 }
