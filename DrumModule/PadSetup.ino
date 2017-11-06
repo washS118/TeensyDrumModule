@@ -9,11 +9,12 @@
  * crash1 --------- 49                     *
  * crash2 --------- 57                     *
  * ride-bell ------ 53                     *
+ * hi-hat --------- 46 (changed by pedal)  *
  *******************************************/
 
-unsigned char notes[] =       {35, 38, 50, 48, 41, 49, 57, 53};    // midi notes for each pad
-unsigned char pins[] =        {A0, A1, A2, A3, A4, A5, A6, A7};    // swiched pin for each pad
-unsigned int  thresholds[] =  {10, 10, 10, 10, 10, 10, 10, 10};    // pad thresholds
+unsigned char notes[] =       {35, 38, 50, 48, 41, 49, 57, 53, 46};    // midi notes for each pad
+unsigned char pins[] =        {A0, A1, A2, A3, A4, A5, A6, A7, A8};    // swiched pin for each pad
+unsigned int  thresholds[] =  {10, 10, 10, 10, 10, 10, 10, 10, 10};    // pad thresholds
 
 /*******************
  * setup pad array *

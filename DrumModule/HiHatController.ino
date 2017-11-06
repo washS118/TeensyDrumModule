@@ -1,4 +1,4 @@
-unsigned char cymbalPin = A8;
+unsigned char cymbalIndex = 8;
 unsigned char hatController = A9;
 unsigned char openNote = 46;                    // midi note for open hat
 unsigned char closedNote = 42;                  // midi note for closed hat
@@ -14,18 +14,11 @@ void setupHiHat(){
 }
 
 void updateHat(){
-  unsigned int val = analogRead(cymbalPin);
-  hatBuffer[hatIndex] = val;
-  hatIndex++;
-  if(hatIndex >= BUFFER_SIZE) hatIndex = (unsigned int) 0;
-
-  unsigned int max = 0;
-  for(int i = 0; i < BUFFER_SIZE; i++){
-    if(hatBuffer[i] > hatThreshold &&
-      hatBuffer[i] > max) max = hatBuffer[i];
+  if(digitalRead(hatController) == HIGH){
+    pads[hatIndex].note = closedNote;
+  }else{
+    pads[hatIndex].note = openNote;
   }
-
-  currentMax = max;
 }
 
 void calculateHat(){

@@ -4,6 +4,7 @@
 #define CHANNEL 1                             // the midi channel
 #define BUFFER_SIZE 10                        // how many inputs should be stored
 #define MIN_TIME_BETWEEN_NOTES 1              // how many milliseconds before next hit
+#define MAX_MIDI_VELOCITY 127                 // the largest velocity accepted by the midi standard
 
 typedef struct {
   unsigned int  threshold;                    // the threshold to determine what counts as idle
@@ -79,8 +80,7 @@ void updatePad(PadData *pad){
  * play note using data stored in pad *
  **************************************/
 void playMidiNote(unsigned char note, unsigned int velocity){
-  if(note != 35) return;
-  if(velocity > 127) velocity = 127;
+  if(velocity > 127) velocity = MAX_MIDI_VELOCITY;
   usbMIDI.sendNoteOn(note, velocity, CHANNEL);
   usbMIDI.sendNoteOff(note, velocity, CHANNEL);
 }
