@@ -1,15 +1,17 @@
 #include <MIDI.h>
 
-#define NUM_PADS 9                            // how many pads are supported by the controller
-#define CHANNEL 1                             // the midi channel
+#define NUM_PADS 10                           // how many pads are supported by the controller
+#define CHANNEL 10                             // the midi channel
 #define BUFFER_SIZE 10                        // how many inputs should be stored
-#define MIN_TIME_BETWEEN_NOTES 1              // how many milliseconds before next hit
+#define MIN_TIME_BETWEEN_NOTES 75             // how many milliseconds before next hit
 #define MAX_MIDI_VELOCITY 127                 // the largest velocity accepted by the midi standard
+#define USE_MAX true
 
 typedef struct {
   unsigned int  threshold;                    // the threshold to determine what counts as idle
   unsigned char note;                         // the midi note to be played on hit
   unsigned char pin;                          // the pin index for using the switched pin mode
+  unsigned int  defaultVelocity;                      // the velocity to use when USE_MAX is true
   unsigned int  inputBuffer[BUFFER_SIZE];     // the buffer containing the raw analog values
   unsigned char bufferIndex;                  // specifies which index is the most recent
   unsigned int  lastHitTime;                  // the millisecond the pad was last hit on
@@ -28,13 +30,9 @@ void setup() {
 
 /*************
  * main loop *
- *************/
-unsigned int buffer[] = {0,0,0,0,0,0,0,0,0,0};
-unsigned char currentIndex = 0;
- 
-void loop() {  
-  Serial.println(analogRead(A0));
-  updateHat();
+ *************/ 
+void loop() {    
+  //updateHat();
   
   for(int i = 0; i < NUM_PADS; ++i){
     updatePad(&pads[i]);
@@ -62,6 +60,8 @@ void updatePad(PadData *pad){
 
   if(max == pad->inputBuffer[BUFFER_SIZE / 2]){
     pad->currentMax = max;
+  }else{
+    pad->currentMax = 0;
   }
 }
 
@@ -75,7 +75,12 @@ void updatePad(PadData *pad){
     unsigned int timeSinceHit = time - pad->lastHitTime;
     if(timeSinceHit > MIN_TIME_BETWEEN_NOTES){
       pad->lastHitTime = time;
-      playMidiNote(pad->note, pad->currentMax);
+      unsigned int velocity = pad->currentMax;
+      if(USE_MAX){
+        velocity = pad->defaultVelocity;
+      }
+      
+      playMidiNote(pad->note, velocity);
     }
   }
  }
@@ -84,6 +89,12 @@ void updatePad(PadData *pad){
  * play note using data stored in pad *
  **************************************/
 void playMidiNote(unsigned char note, unsigned int velocity){
+  //skip if note is zero (deactivated);
+  if(note == 0) return;
+  
+  Serial.print(note);
+  Serial.print(":");
+  Serial.println(velocity);
   if(velocity > 127) velocity = MAX_MIDI_VELOCITY;
   usbMIDI.sendNoteOn(note, velocity, CHANNEL);
   usbMIDI.sendNoteOff(note, velocity, CHANNEL);
